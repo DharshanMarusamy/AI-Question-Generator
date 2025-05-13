@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Question Paper Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeOutScale { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } }
+        .modal-open { animation: fadeInScale 0.3s ease-out forwards; }
+        .modal-close { animation: fadeOutScale 0.3s ease-in forwards; }
+        .modal-button:hover { transform: scale(1.05); transition: transform 0.2s ease; }
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a1c2e 0%, #2d3748 100%);
+        }
+        .card-hover {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="gradient-bg text-slate-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Error Message -->
+        <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4 shadow-lg" role="alert">
+            <span class="block sm:inline"></span>
+        </div>
+
+        <!-- Success Message -->
+        <div id="success-message" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-4 shadow-lg" role="alert">
+            <span class="block sm:inline"></span>
+        </div>
+
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">AI Question Paper Generator</h1>
+                <p class="text-slate-400 mt-2">Create professional question papers with AI assistance</p>
+            </div>
+            <button class="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-6 py-2 rounded-lg hover:from-teal-600 hover:to-blue-600 transition-all duration-200 shadow-lg">+ New Paper</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex space-x-4 mb-8 border-b border-slate-700">
+            <button id="ai-tab" class="px-6 py-3 text-lg font-medium text-teal-400 hover:text-teal-300 border-b-2 border-teal-400">AI Generator</button>
+            <button id="excel-tab" class="px-6 py-3 text-lg font-medium text-slate-400 hover:text-slate-300">Upload Excel</button>
+        </div>
+
+        <!-- Form Section (AI Generator) -->
+        <div id="form-section" class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-2xl shadow-xl hidden">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold text-teal-400">Create Custom Question Paper</h2>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Content Settings -->
+                <div class="bg-slate-800/50 p-6 rounded-xl shadow-lg card-hover">
+                    <h3 class="text-xl font-semibold mb-6 text-teal-400">Content Settings</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Subject *</label>
+                            <select id="subject" class="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                                <option value="" selected>Select a subject</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Science">Science</option>
+                                <option value="History">History</option>
+                                <option value="English">English</option>
+                                <option value="Operating System">Operating System</option>
+                                <option value="DBMS">DataBase Management System</option>
+                                <option value="OOP">Object Oriented Programming</option>
+                                <option value="Communication System">Communication System</option>
+                                <option value="Artificial MachineLearning">Artificial Machine Learning</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Specific Topic (Optional)</label>
+                            <input id="topic" type="text" class="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="E.g., Algebra, Renaissance, Thermodynamics">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Difficulty Level *</label>
+                            <select id="difficulty" class="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                                <option value="Easy">Easy</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Question Types *</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <label class="flex items-center space-x-2 p-2 rounded-lg hover:bg-slate-700/50">
+                                    <input type="checkbox" value="Multiple Choice" class="question-type accent-teal-500">
+                                    <span>Multiple Choice</span>
+                                </label>
+                                <label class="flex items-center space-x-2 p-2 rounded-lg hover:bg-slate-700/50">
+                                    <input type="checkbox" value="Short Answer" class="question-type accent-teal-500">
+                                    <span>Short Answer</span>
+                                </label>
+                                <label class="flex items-center space-x-2 p-2 rounded-lg hover:bg-slate-700/50">
+                                    <input type="checkbox" value="Long Answer" class="question-type accent-teal-500">
+                                    <span>Long Answer</span>
+                                </label>
+                                <label class="flex items-center space-x-2 p-2 rounded-lg hover:bg-slate-700/50">
+                                    <input type="checkbox" value="Fill in the Blanks" class="question-type accent-teal-500">
+                                    <span>Fill in the Blanks</span>
+                                </label>
+                                <label class="flex items-center space-x-2 p-2 rounded-lg hover:bg-slate-700/50">
+                                    <input type="checkbox" value="True/False" class="question-type accent-teal-500">
+                                    <span>True/False</span>
+                                </label>
+                                <label class="flex items-center space-x-2 p-2 rounded-lg hover:bg-slate-700/50">
+                                    <input type="checkbox" value="Essay" class="question-type accent-teal-500">
+                                    <span>Essay</span>
+                                </label>
+                                <label class="flex items-center space-x-2 p-2 rounded-lg hover:bg-slate-700/50">
+                                    <input type="checkbox" value="Problem Solving" class="question-type accent-teal-500">
+                                    <span>Problem Solving</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Number of Questions *</label>
+                            <input id="num-questions" type="number" min="1" max="50" value="10" class="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Input Questions *</label>
+                            <div id="questions-container" class="space-y-4">
+                                <div class="question-input-group">
+                                    <div class="flex items-center gap-2">
+                                        <input type="text" class="question-input w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Enter question 1...">
+                                        <button type="button" class="add-question-btn p-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-2 text-sm text-slate-400">
+                                Questions entered: <span id="questions-count">1</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Paper Settings and How It Works -->
+                <div class="space-y-8">
+                    <div class="bg-slate-800/50 p-6 rounded-xl shadow-lg card-hover">
+                        <h3 class="text-xl font-semibold mb-6 text-teal-400">Paper Settings</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Exam Title</label>
+                                <input id="exam-title" type="text" class="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="E.g., Midterm Examination, Final Assessment">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Time Limit (minutes)</label>
+                                <input id="time-limit" type="number" min="1" value="60" class="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Instructions (Optional)</label>
+                                <textarea id="instructions" class="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" rows="3" placeholder="Enter any special instructions for the exam..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- How It Works -->
+                    <div class="bg-gradient-to-r from-teal-500/10 to-blue-500/10 p-6 rounded-xl border border-teal-500/20">
+                        <h4 class="text-lg font-semibold flex items-center mb-4 text-teal-400">
+                            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            How it works
+                        </h4>
+                        <p class="text-slate-300">Our AI will generate high-quality questions based on your specifications. You can then download the question paper as a PDF.</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="generateQuestions()" class="mt-8 w-full bg-gradient-to-r from-teal-500 to-blue-500 text-white p-4 rounded-xl hover:from-teal-600 hover:to-blue-600 transition-all duration-200 shadow-lg text-lg font-semibold">Create Custom Question Paper</button>
+        </div>
+
+        <!-- Excel Upload Section -->
+        <div id="excel-section" class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-2xl shadow-xl hidden">
+            <h2 class="text-2xl font-bold text-teal-400 mb-8">Upload Excel File</h2>
+            <div class="space-y-6">
+                <div class="bg-slate-800/50 p-6 rounded-xl shadow-lg card-hover">
+                    <label class="block text-sm font-medium mb-4">Upload Excel File *</label>
+                    <input type="file" id="excel-file" accept=".xlsx, .xls, .csv" class="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+
+                <!-- Excel Processing Settings -->
+                <div class="bg-slate-800/50 p-6 rounded-xl shadow-lg card-hover">
+                    <h3 class="text-xl font-semibold mb-6 text-teal-400">Processing Settings</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Specific Topic (Optional)</label>
+                            <input id="excel-topic" type="text" class="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="E.g., Algebra, Renaissance, Thermodynamics">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Difficulty Level *</label>
+                            <select id="excel-difficulty" class="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                                <option value="Easy">Easy</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Question Types *</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700/50">
+                                    <label class="flex items-center space-x-2 flex-grow">
+                                        <input type="checkbox" value="Multiple Choice" class="excel-question-type accent-teal-500">
+                                        <span>Multiple Choice</span>
+                                    </label>
+                                    <input type="number" min="0" max="50" value="0" class="question-count w-20 p-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Count">
+                                </div>
+                                <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700/50">
+                                    <label class="flex items-center space-x-2 flex-grow">
+                                        <input type="checkbox" value="Short Answer" class="excel-question-type accent-teal-500">
+                                        <span>Short Answer</span>
+                                    </label>
+                                    <input type="number" min="0" max="50" value="0" class="question-count w-20 p-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Count">
+                                </div>
+                                <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700/50">
+                                    <label class="flex items-center space-x-2 flex-grow">
+                                        <input type="checkbox" value="Long Answer" class="excel-question-type accent-teal-500">
+                                        <span>Long Answer</span>
+                                    </label>
+                                    <input type="number" min="0" max="50" value="0" class="question-count w-20 p-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Count">
+                                </div>
+                                <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700/50">
+                                    <label class="flex items-center space-x-2 flex-grow">
+                                        <input type="checkbox" value="Fill in the Blanks" class="excel-question-type accent-teal-500">
+                                        <span>Fill in the Blanks</span>
+                                    </label>
+                                    <input type="number" min="0" max="50" value="0" class="question-count w-20 p-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Count">
+                                </div>
+                                <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700/50">
+                                    <label class="flex items-center space-x-2 flex-grow">
+                                        <input type="checkbox" value="True/False" class="excel-question-type accent-teal-500">
+                                        <span>True/False</span>
+                                    </label>
+                                    <input type="number" min="0" max="50" value="0" class="question-count w-20 p-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Count">
+                                </div>
+                                <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700/50">
+                                    <label class="flex items-center space-x-2 flex-grow">
+                                        <input type="checkbox" value="Essay" class="excel-question-type accent-teal-500">
+                                        <span>Essay</span>
+                                    </label>
+                                    <input type="number" min="0" max="50" value="0" class="question-count w-20 p-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Count">
+                                </div>
+                                <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700/50">
+                                    <label class="flex items-center space-x-2 flex-grow">
+                                        <input type="checkbox" value="Problem Solving" class="excel-question-type accent-teal-500">
+                                        <span>Problem Solving</span>
+                                    </label>
+                                    <input type="number" min="0" max="50" value="0" class="question-count w-20 p-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Count">
+                                </div>
+                            </div>
+                            <div class="mt-4 text-sm text-slate-400">
+                                Total Questions: <span id="total-questions">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paper Settings -->
+                <div class="bg-slate-800/50 p-6 rounded-xl shadow-lg card-hover">
+                    <h3 class="text-xl font-semibold mb-6 text-teal-400">Paper Settings</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Exam Title</label>
+                            <input id="excel-exam-title" type="text" class="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="E.g., Midterm Examination, Final Assessment">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Time Limit (minutes)</label>
+                            <input id="excel-time-limit" type="number" min="1" value="60" class="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Instructions (Optional)</label>
+                            <textarea id="excel-instructions" class="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" rows="3" placeholder="Enter any special instructions for the exam..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="process-excel-btn" class="w-full bg-gradient-to-r from-teal-500 to-blue-500 text-white p-4 rounded-xl hover:from-teal-600 hover:to-blue-600 transition-all duration-200 shadow-lg text-lg font-semibold">Process Excel</button>
+            </div>
+
+            <!-- Excel Upload Guidelines -->
+            <div class="mt-8 bg-gradient-to-r from-teal-500/10 to-blue-500/10 p-6 rounded-xl border border-teal-500/20">
+                <h4 class="text-lg font-semibold flex items-center mb-4 text-teal-400">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Excel Upload Guidelines
+                </h4>
+                <p class="text-slate-300">Ensure your Excel file has the following columns: <strong>Description</strong> (question text), <strong>Type</strong>, <strong>Course Outcome</strong> (e.g., CO3), and <strong>Bloom's Level</strong> (e.g., Remember, Understand, Apply, Analysis, Evaluate, Create). Optionally, include a <strong>Unit</strong> column.</p>
+            </div>
+        </div>
+
+        <!-- Questions Display -->
+        <div class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-2xl shadow-xl mt-8">
+            <h2 class="text-2xl font-bold text-teal-400 mb-6">Generated Questions</h2>
+            <div id="questions-list" class="space-y-4"></div>
+            <button onclick="exportPDF()" class="mt-6 bg-gradient-to-r from-amber-500 to-orange-500 text-white p-4 rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 shadow-lg text-lg font-semibold">Download as PDF</button>
+        </div>
+
+        <!-- Custom Modal for Alerts -->
+        <div id="alert-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center">
+            <div class="bg-slate-800 text-slate-100 p-8 rounded-2xl shadow-2xl max-w-md w-full relative modal-open">
+                <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-200" aria-label="Close modal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                <p id="alert-message" class="text-lg font-semibold text-center mb-6 leading-relaxed"></p>
+                <button onclick="closeModal()" class="w-full bg-gradient-to-r from-teal-500 to-blue-500 text-white px-6 py-3 rounded-xl hover:from-teal-600 hover:to-blue-600 transition-all duration-200 shadow-lg text-lg font-semibold">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-slate-900/50 text-slate-400 text-center p-4 mt-8">
+    </footer>
+
+    <script>
+        let paperId = null;
+        let currentSection = 'ai';
+
+        // Tab switching
+        document.getElementById('ai-tab').addEventListener('click', () => switchTab('ai'));
+        document.getElementById('excel-tab').addEventListener('click', () => switchTab('excel'));
+
+        function switchTab(section) {
+            currentSection = section;
+            document.getElementById('form-section').classList.toggle('hidden', section !== 'ai');
+            document.getElementById('excel-section').classList.toggle('hidden', section !== 'excel');
+            document.getElementById('ai-tab').classList.toggle('text-teal-400', section === 'ai');
+            document.getElementById('ai-tab').classList.toggle('text-slate-400', section !== 'ai');
+            document.getElementById('excel-tab').classList.toggle('text-teal-400', section === 'excel');
+            document.getElementById('excel-tab').classList.toggle('text-slate-400', section !== 'excel');
+        }
+
+        function showModal(message) {
+            const modal = document.getElementById("alert-modal");
+            document.getElementById("alert-message").textContent = message;
+            modal.classList.remove("hidden");
+            modal.querySelector("div").classList.remove("modal-close");
+            modal.querySelector("div").classList.add("modal-open");
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("alert-modal");
+            modal.querySelector("div").classList.remove("modal-open");
+            modal.querySelector("div").classList.add("modal-close");
+            modal.addEventListener("animationend", () => {
+                modal.classList.add("hidden");
+            }, { once: true });
+        }
+
+        // Add this helper function at the top of your script section
+        async function fetchWithTimeout(url, options = {}, timeout = 30000) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(id);
+                return response;
+            } catch (error) {
+                clearTimeout(id);
+                if (error.name === 'AbortError') {
+                    throw new Error(`Request timed out after ${timeout}ms`);
+                }
+                if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                    // Check if it's a CORS error
+                    if (error.message.includes('CORS')) {
+                        throw new Error('CORS error: The server is not configured to allow requests from this origin');
+                    }
+                    // Check if the server is running
+                    throw new Error('Network error: Unable to connect to the server. Please check if the server is running and accessible');
+                }
+                throw error;
+            }
+        }
+
+        // Add retry logic helper
+        async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+            let lastError;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    return await fetchWithTimeout(url, options);
+                } catch (error) {
+                    lastError = error;
+                    if (error.message.includes('timed out') || error.message.includes('Network error')) {
+                        console.log(`Retry attempt ${i + 1} of ${maxRetries}`);
+                        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
+                        continue;
+                    }
+                    throw error;
+                }
+            }
+            throw lastError;
+        }
+
+        // Add these new functions for handling dynamic question inputs
+        function createQuestionInput(index) {
+            const div = document.createElement('div');
+            div.className = 'question-input-group';
+            div.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <input type="text" class="question-input w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Enter question ${index}...">
+                    <button type="button" class="remove-question-btn p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            `;
+            return div;
+        }
+
+        function updateQuestionsCount() {
+            const count = document.querySelectorAll('.question-input').length;
+            document.getElementById('questions-count').textContent = count;
+        }
+
+        // Add event listeners for dynamic question inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            const questionsContainer = document.getElementById('questions-container');
+            
+            // Add question button click handler
+            questionsContainer.addEventListener('click', function(e) {
+                if (e.target.closest('.add-question-btn')) {
+                    const currentCount = document.querySelectorAll('.question-input').length;
+                    if (currentCount < 50) {
+                        const newInput = createQuestionInput(currentCount + 1);
+                        questionsContainer.appendChild(newInput);
+                        updateQuestionsCount();
+                    } else {
+                        showError('Maximum 50 questions allowed');
+                    }
+                }
+                
+                // Remove question button click handler
+                if (e.target.closest('.remove-question-btn')) {
+                    const inputGroup = e.target.closest('.question-input-group');
+                    if (document.querySelectorAll('.question-input-group').length > 1) {
+                        inputGroup.remove();
+                        updateQuestionsCount();
+                        // Update placeholders for remaining inputs
+                        document.querySelectorAll('.question-input').forEach((input, index) => {
+                            input.placeholder = `Enter question ${index + 1}...`;
+                        });
+                    } else {
+                        showError('At least one question is required');
+                    }
+                }
+            });
+        });
+
+        // Update the generateQuestions function to collect all questions
+        async function generateQuestions() {
+            const subject = document.getElementById("subject").value;
+            const topic = document.getElementById("topic").value;
+            const difficulty = document.getElementById("difficulty").value;
+            const questionTypes = Array.from(document.querySelectorAll(".question-type:checked")).map(cb => cb.value);
+            const numQuestions = document.getElementById("num-questions").value;
+            const examTitle = document.getElementById("exam-title").value;
+            const timeLimit = document.getElementById("time-limit").value;
+            const instructions = document.getElementById("instructions").value;
+            
+            // Collect all questions
+            const questions = Array.from(document.querySelectorAll('.question-input')).map(input => {
+                const questionText = input.value.trim();
+                if (!questionText) return null;
+                
+                // Format the question with its details
+                return `${questionText} (${questionTypes[0]}, ${difficulty}, Understand, ${topic || subject})`;
+            }).filter(q => q !== null);
+
+            // Enhanced validation
+            if (!subject || !subject.trim()) {
+                showError("Please enter a subject.");
+                return;
+            }
+
+            if (!questionTypes.length) {
+                showError("Please select at least one question type.");
+                return;
+            }
+
+            if (questions.length === 0) {
+                showError("Please enter at least one question.");
+                return;
+            }
+
+            if (!numQuestions || numQuestions < 1 || numQuestions > 50) {
+                showError("Number of questions must be between 1 and 50.");
+                return;
+            }
+
+            if (!timeLimit || timeLimit < 1) {
+                showError("Time limit must be at least 1 minute.");
+                return;
+            }
+
+            // Show loading state
+            const generateButton = document.querySelector('button[onclick="generateQuestions()"]');
+            const originalText = generateButton.innerHTML;
+            generateButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Questions...';
+            generateButton.disabled = true;
+
+            try {
+                console.log('Sending request to generate questions...');
+                const response = await fetchWithRetry("/api/generate", {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        questions: questions,
+                        topic: topic || subject,
+                        num_questions: parseInt(numQuestions),
+                        question_types: questionTypes,
+                        difficulty,
+                        exam_title: examTitle || "Question Paper",
+                        time_limit: parseInt(timeLimit),
+                        instructions
+                    })
+                });
+
+                console.log('Response received:', response.status);
+                const contentType = response.headers.get("content-type");
+                console.log('Response content type:', contentType);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Error response:', text);
+                    if (response.status === 401) {
+                        throw new Error("API key is not configured. Please check your environment variables.");
+                    } else if (response.status === 429) {
+                        throw new Error("Rate limit exceeded. Please try again later.");
+                    } else if (response.status === 500) {
+                        throw new Error("Server error: The server encountered an internal error. Please try again later.");
+                    } else {
+                        throw new Error(`Server returned error ${response.status}: ${text || 'No error message provided'}`);
+                    }
+                }
+
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    let data;
+                    try {
+                        data = await response.json();
+                    } catch (e) {
+                        const text = await response.text();
+                        console.error('Invalid JSON response:', text);
+                        throw new Error("Server returned invalid JSON: " + text);
+                    }
+                    
+                    if (data.success) {
+                        paperId = data.paper_id;
+                        showSuccess('Questions generated successfully!');
+                        await fetchQuestions();
+                        // Automatically trigger PDF export after questions are generated
+                        await exportPDF();
+                    } else {
+                        throw new Error(data.message || 'Failed to generate questions');
+                    }
+                } else {
+                    const text = await response.text();
+                    throw new Error("Unexpected response from server: " + text);
+                }
+            } catch (error) {
+                console.error('Generation error:', error);
+                if (error.message.includes('timed out')) {
+                    showError("Request timed out. The server is taking too long to respond. Please try again.");
+                } else if (error.message.includes('CORS error')) {
+                    showError("CORS error: The server is not configured to allow requests from this origin. Please contact the administrator.");
+                } else if (error.message.includes('Network error')) {
+                    showError("Network error: Unable to connect to the server. Please check if the server is running and accessible.");
+                } else if (error.message.includes('API key')) {
+                    showError("API key is not configured. Please check your environment variables.");
+                } else if (error.message.includes('Rate limit')) {
+                    showError("Rate limit exceeded. Please try again later.");
+                } else {
+                    showError(error.message || 'Failed to generate questions. Please try again.');
+                }
+            } finally {
+                // Reset button state
+                generateButton.innerHTML = originalText;
+                generateButton.disabled = false;
+            }
+        }
+
+        function updateTotalQuestions() {
+            const total = Array.from(document.querySelectorAll('.question-count')).reduce((sum, input) => {
+                return sum + (parseInt(input.value) || 0);
+            }, 0);
+            document.getElementById('total-questions').textContent = total;
+            
+            // Validate total questions
+            if (total > 50) {
+                showError('Total questions cannot exceed 50');
+                return false;
+            }
+            if (total < 1) {
+                showError('Please select at least one question');
+                return false;
+            }
+            return true;
+        }
+
+        // Add event listeners for question type checkboxes and counts
+        document.querySelectorAll('.excel-question-type').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const countInput = this.closest('div').querySelector('.question-count');
+                if (this.checked) {
+                    if (!countInput.value || countInput.value === '0') {
+                        countInput.value = '1';
+                    }
+                } else {
+                    countInput.value = '0';
+                }
+                updateTotalQuestions();
+            });
+        });
+
+        document.querySelectorAll('.question-count').forEach(input => {
+            input.addEventListener('input', function() {
+                const value = parseInt(this.value) || 0;
+                if (value < 0) this.value = '0';
+                if (value > 50) this.value = '50';
+                
+                const checkbox = this.closest('div').querySelector('.excel-question-type');
+                if (value > 0 && !checkbox.checked) {
+                    checkbox.checked = true;
+                } else if (value === 0 && checkbox.checked) {
+                    checkbox.checked = false;
+                }
+                
+                if (!updateTotalQuestions()) {
+                    this.value = '0';
+                }
+            });
+        });
+
+        // Update the uploadExcel function
+        async function uploadExcel() {
+            const fileInput = document.getElementById('excel-file');
+            const file = fileInput.files[0];
+            if (!file) {
+                showError('Please select a file to upload');
+                return;
+            }
+
+            // Validate required fields
+            const questionTypes = Array.from(document.querySelectorAll(".excel-question-type:checked")).map(cb => {
+                const countInput = cb.closest('div').querySelector('.question-count');
+                const count = parseInt(countInput.value) || 0;
+                return {
+                    type: cb.value,
+                    count: count
+                };
+            }).filter(q => q.count > 0);
+
+            const totalQuestions = questionTypes.reduce((sum, q) => sum + q.count, 0);
+            if (totalQuestions < 1) {
+                showError('Please select at least one question');
+                return;
+            }
+            if (totalQuestions > 50) {
+                showError('Total questions cannot exceed 50');
+                return;
+            }
+
+            // Show loading state
+            const uploadButton = document.getElementById('process-excel-btn');
+            const originalText = uploadButton.innerHTML;
+            uploadButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            uploadButton.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('excel_file', file);
+                formData.append('random_select', 'true');
+                formData.append('topic', document.getElementById('excel-topic').value);
+                formData.append('difficulty', document.getElementById('excel-difficulty').value);
+                formData.append('question_types', JSON.stringify(questionTypes));
+                formData.append('exam_title', document.getElementById('excel-exam-title').value);
+                formData.append('time_limit', document.getElementById('excel-time-limit').value);
+                formData.append('instructions', document.getElementById('excel-instructions').value);
+                formData.append('total_questions', totalQuestions.toString());
+
+                const response = await fetchWithRetry('/api/upload_excel', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                console.log('Response received:', response.status);
+                const contentType = response.headers.get("content-type");
+                console.log('Response content type:', contentType);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Error response:', text);
+                    throw new Error(`Server returned error ${response.status}: ${text || 'No error message provided'}`);
+                }
+
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const text = await response.text();
+                    console.log("Raw response:", text);
+                    if (!text) {
+                        throw new Error("Server returned empty response");
+                    }
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        throw new Error("Server returned invalid JSON: " + text);
+                    }
+                    
+                    if (data.success) {
+                        paperId = data.paper_id;
+                        showSuccess(`File processed successfully! ${totalQuestions} questions selected based on your criteria.`);
+                        
+                        // Wait a moment for the database to be updated
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        
+                        // Fetch and display questions
+                        const questionsLoaded = await fetchQuestions();
+                        
+                        // Automatically trigger PDF export if questions were loaded successfully
+                        if (questionsLoaded) {
+                            await exportPDF();
+                        } else {
+                            showError("No questions were selected from the Excel file. Please check the file format and criteria.");
+                        }
+                    } else {
+                        throw new Error(data.message || 'Failed to process file');
+                    }
+                } else {
+                    const text = await response.text();
+                    throw new Error("Unexpected response from server: " + text);
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                if (error.message.includes('timed out')) {
+                    showError("Request timed out. The server is taking too long to process the file. Please try again.");
+                } else if (error.message.includes('CORS error')) {
+                    showError("CORS error: The server is not configured to allow file uploads from this origin. Please contact the administrator.");
+                } else if (error.message.includes('Network error')) {
+                    showError("Network error: Unable to connect to the server. Please check if the server is running and accessible.");
+                } else {
+                    showError(error.message || 'Network error: Unable to process file. Please check your connection and try again.');
+                }
+            } finally {
+                // Reset button state
+                uploadButton.innerHTML = originalText;
+                uploadButton.disabled = false;
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+            setTimeout(() => {
+                successDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Update the fetchQuestions function
+        async function fetchQuestions() {
+            if (!paperId) {
+                showError("No paper ID found. Please generate questions first.");
+                return;
+            }
+            
+            try {
+                console.log('Fetching questions for paper:', paperId);
+                const response = await fetchWithRetry(`/api/questions?paper_id=${paperId}`);
+                console.log('Response received:', response.status);
+                const contentType = response.headers.get("content-type");
+                console.log('Response content type:', contentType);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Error response:', text);
+                    throw new Error(`Failed to fetch questions: ${response.status} - ${text || 'No error message provided'}`);
+                }
+                
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const text = await response.text();
+                    if (!text) {
+                        throw new Error("Server returned empty response");
+                    }
+                    let questions;
+                    try {
+                        questions = JSON.parse(text);
+                    } catch (e) {
+                        throw new Error("Server returned invalid JSON: " + text);
+                    }
+                    
+                    if (!Array.isArray(questions) || questions.length === 0) {
+                        showError("No questions found for this paper.");
+                        return;
+                    }
+
+                    const questionsList = document.getElementById("questions-list");
+                    questionsList.innerHTML = "";
+
+                    questions.forEach(q => {
+                        const div = document.createElement("div");
+                        div.className = "flex items-center p-4 border border-slate-700 rounded-md bg-slate-700";
+                        div.innerHTML = `
+                            <input type="checkbox" class="mr-4 question-checkbox accent-teal-500" data-id="${q.id}" checked>
+                            <div>
+                                <p><strong>Question:</strong> ${q.question}</p>
+                                <p><strong>Type:</strong> ${q.type} | <strong>Difficulty:</strong> ${q.difficulty} | <strong>Bloom's:</strong> ${q.blooms_level}</p>
+                                <p><strong>Topic:</strong> ${q.topic}</p>
+                            </div>
+                        `;
+                        questionsList.appendChild(div);
+                    });
+
+                    return questions.length > 0;
+                } else {
+                    const text = await response.text();
+                    throw new Error("Unexpected response from server: " + text);
+                }
+            } catch (error) {
+                console.error("Error fetching questions:", error);
+                if (error.message.includes('timed out')) {
+                    showError("Request timed out. The server is taking too long to fetch questions. Please try again.");
+                } else if (error.message.includes('CORS error')) {
+                    showError("CORS error: The server is not configured to allow requests from this origin. Please contact the administrator.");
+                } else if (error.message.includes('Network error')) {
+                    showError("Network error: Unable to connect to the server. Please check if the server is running and accessible.");
+                } else {
+                    showError("Error fetching questions. Please try again.");
+                }
+                return false;
+            }
+        }
+
+        // Update the exportPDF function
+        async function exportPDF() {
+            if (!paperId) {
+                showError("No paper ID found. Please generate questions first.");
+                return;
+            }
+
+            let questionIds = Array.from(document.querySelectorAll(".question-checkbox:checked")).map(cb => parseInt(cb.dataset.id));
+
+            if (questionIds.length === 0) {
+                // If no questions are selected, select all questions
+                const allCheckboxes = document.querySelectorAll(".question-checkbox");
+                allCheckboxes.forEach(cb => cb.checked = true);
+                questionIds = Array.from(allCheckboxes).map(cb => parseInt(cb.dataset.id));
+            }
+
+            if (questionIds.length === 0) {
+                showError("No questions available to export. Please generate or upload questions first.");
+                return;
+            }
+
+            try {
+                console.log("Exporting PDF with:", { paper_id: paperId, question_ids: questionIds });
+                const response = await fetchWithRetry("/api/export", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        paper_id: parseInt(paperId), 
+                        question_ids: questionIds 
+                    })
+                });
+                console.log('Response received:', response.status);
+                const contentType = response.headers.get("content-type");
+                console.log('Response content type:', contentType);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Error response:', text);
+                    throw new Error(`Failed to export PDF: ${response.status} - ${text || 'No error message provided'}`);
+                }
+
+                if (contentType && contentType.indexOf("application/pdf") !== -1) {
+                    const blob = await response.blob();
+                    if (blob.size === 0) {
+                        throw new Error("Server returned empty PDF file");
+                    }
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "question_paper.pdf";
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    showSuccess("PDF downloaded successfully!");
+                } else {
+                    const text = await response.text();
+                    throw new Error("Unexpected response from server: " + text);
+                }
+            } catch (error) {
+                console.error("Error exporting PDF:", error);
+                if (error.message.includes('timed out')) {
+                    showError("Request timed out. The server is taking too long to generate the PDF. Please try again.");
+                } else if (error.message.includes('CORS error')) {
+                    showError("CORS error: The server is not configured to allow PDF downloads from this origin. Please contact the administrator.");
+                } else if (error.message.includes('Network error')) {
+                    showError("Network error: Unable to connect to the server. Please check if the server is running and accessible.");
+                } else {
+                    showError(error.message || "Error generating PDF. Please try again.");
+                }
+            }
+        }
+
+        // Initialize
+        switchTab('ai');
+        document.getElementById('process-excel-btn').addEventListener('click', uploadExcel);
+
+        // Auto-select first question type and set default count
+        function initializeQuestionTypes() {
+            const firstQuestionType = document.querySelector('.excel-question-type');
+            if (firstQuestionType) {
+                firstQuestionType.checked = true;
+                const countInput = firstQuestionType.closest('div').querySelector('.question-count');
+                if (countInput) {
+                    countInput.value = '5'; // Set default count to 5
+                    updateTotalQuestions(); // Update the total
+                }
+            }
+        }
+
+        // Call initialization when switching to excel tab
+        document.getElementById('excel-tab').addEventListener('click', () => {
+            switchTab('excel');
+            initializeQuestionTypes();
+        });
+
+        // Also initialize when the page loads if excel tab is active
+        if (currentSection === 'excel') {
+            initializeQuestionTypes();
+        }
+    </script>
+</body>
+</html>
