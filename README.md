@@ -72,6 +72,7 @@ Designed for **faculty members, academic institutions, and engineering education
 
 ---
 ##🏗️ System Architecture
+```text
                         ┌────────────────────────────────┐
                         │        Frontend (Client)       │
                         │   HTML + Tailwind CSS + JS     │
@@ -98,7 +99,7 @@ Designed for **faculty members, academic institutions, and engineering education
      │  (ReportLab Engine)      │
      └──────────────────────────┘
 
-
+```
 ## 🔍 Architecture Explanation
 
 ### 1️⃣ Frontend Layer
@@ -137,4 +138,125 @@ Designed for **faculty members, academic institutions, and engineering education
 ### 5️⃣ PDF Engine
 - Formats the final question paper  
 - Structures sections, marks, and instructions  
-- Generates a downloadable professional PDF using ReportLab  
+- Generates a downloadable professional PDF using ReportLab
+---
+## ⚙️ Installation & Setup
+
+### 2️⃣ Create Virtual Environment (Recommended)
+
+```bash
+python -m venv venv
+```
+### Activate Virtual Environment
+
+**Windows**
+```bash
+venv\Scripts\activate
+```
+### 3️⃣ Install Dependencies
+
+```bash
+pip install flask flask-cors pandas requests reportlab openpyxl python-dotenv
+```
+### 4️⃣ Environment Variables
+
+Create a `.env` file in the **root directory** of the project:
+
+```env
+XAI_API_KEY=your_sk_key_here
+```
+### 5️⃣ Run the Application
+
+```bash
+python app.py
+```
+## 📊 Database Schema
+
+The application uses **SQLite** to store question papers and questions.
+
+---
+
+### 🗂️ Table: `papers`
+
+| Field | Description |
+|------|-------------|
+| `id` | Primary Key |
+| `title` | Exam Title |
+| `time_limit` | Duration |
+| `instructions` | Instructions |
+| `created_at` | Timestamp |
+
+---
+
+### 🗂️ Table: `questions`
+
+| Field | Description |
+|------|-------------|
+| `id` | Primary Key |
+| `paper_id` | Foreign Key |
+| `question_text` | Question |
+| `type` | Short / Long |
+| `difficulty` | Easy / Medium / Hard |
+| `blooms_level` | Bloom’s Level |
+| `course_outcome` | Course Outcome (CO) |
+| `unit` | Unit |
+| `marks` | Marks |
+
+---
+
+## 📁 Excel Upload Format
+
+To ensure successful bulk processing, the uploaded Excel file must contain the following columns.
+
+### Required Columns
+
+| Description | Type | Course Outcome | Bloom's Level | Unit (Optional) |
+|------------|------|----------------|---------------|-----------------|
+| Explain the TimesNet architecture | Long Answer | CO3 | Evaluate | Unit 4 |
+| What is a Graph Neural Network? | Short Answer | CO1 | Understand | Unit 1 |
+---
+## 📂 Project Structure
+
+```text
+ai-question-generator/
+│
+├── app.py
+├── quetions.db
+├── templates/
+     └── index.html
+├── .env
+├── requirements.txt
+└── README.md
+```
+## 🔐 Security Practices
+
+- Environment-based API key storage using `.env`
+- Flask-CORS enabled for controlled cross-origin access
+- Input validation for Excel file uploads
+- SQL injection prevention using parameterized queries
+
+---
+
+## 🚧 Future Enhancements
+
+- 🔐 Faculty authentication & role-based access
+- 📊 AI-based question difficulty calibration
+- 🧠 Automatic answer-key generation
+- ☁️ Cloud deployment (AWS / Render)
+- 📄 Swagger / OpenAPI documentation
+- ⚡ Migration to FastAPI for high performance
+
+---
+
+## 👨‍💻 Developer
+
+**Dharshan Marusamy**  
+Pre-Final Year CCE Student  
+Python | FastAPI | AI Enthusiast  
+
+---
+
+## 📜 License
+
+This project is intended for **academic and educational use**.
+
